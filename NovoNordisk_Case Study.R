@@ -99,7 +99,7 @@ v1.B = cbind(cbind(cbind(rep(1,n),v1.B),age),gen)
 # The mean and standard deviations for the markers are given
 
 m.B_v2 = c(136.1,78.8,108.8,46.3,90.9,163.5,159.1,34.7,94.4)
-sd.B_v2 = c(14.89,8.68,13.1,12.44,33.23,439.87,83.77,5.43,20.11)
+sd.B_v2 = c(14.89,8.68,13.1,12.44,33.23,39.87,83.77,5.43,20.11)
 
 v2.B = matrix(0,nrow=n,ncol=9)
 
@@ -150,4 +150,113 @@ d = read.csv("C:/Users/somji/OneDrive/Desktop/novodata.csv")
 # given objectives
 
 
+# Longitudinal Data Generation --------------------------------------------
+rm(list=ls())
 
+library(mvtnorm)
+library(matrixcalc)
+
+set.seed(1000)
+
+# Calculating Sigma Matrix
+
+sig = function(a,b,c)
+{
+  v = c(a,b,c)
+  s = matrix(0,ncol=3,nrow=3)
+  for(i in 1:3)
+  {
+    for(j in 1:3)
+    {
+      if(i==j)
+        s[i,j] = v[i]^2
+      else
+        s[i,j] = runif(1)*v[i]*v[j]
+    }
+  }
+  for(i in 1:3)
+  {
+    for(j in 1:3)
+    {
+      if(i!=j)
+        s[i,j] = s[j,i]
+    }
+  }
+  return(s)
+}
+
+
+# Treatment A -------------------------------------------------------------
+
+# Visit 1
+m.A_v1 = c(139.2,83,121,47.5,105.2,184.9,243.9,36.4,107.4)
+sd.A_v1 = c(17.07,10.85,15.02,13.08,37.72,47.85,188.58,6.79,22.58)
+
+# Visit 2
+m.A_v2 = c(135.5,82.1,117.6,47.3,100.5,176.3,213.6,33.9,90.3)
+sd.A_v2 = c(14.89,10.8,14.77,12.99,30.89,45.18,145.33,6.73,20.31)
+
+# Visit 3
+m.A_v3 = c(137.4,82.3,116,47,96.3,167.7,197,28.5,81.7)
+sd.A_v3 = c(16.2,10.7,15.54,12.34,34.8,42.73,129.94,6.03,18.88)
+
+
+d_A = matrix(0,nrow=188*3,ncol=9)
+
+for(i in 1:9)
+{
+  while(TRUE)
+  {
+    if(is.positive.semi.definite(sig(sd.A_v1[i],sd.A_v2[i],sd.A_v3[i]))==T)
+    {
+      s = sig(sd.A_v1[i],sd.A_v2[i],sd.A_v3[i])
+      m = c(m.A_v1[i],m.A_v2[i],m.A_v3[i])
+      d_A[,i] = rmvnorm(188,mean=m,sigma=s)
+      break
+    }else
+    {
+      s = sig(sd.A_v1[i],sd.A_v2[i],sd.A_v3[i])
+    }
+  }
+}
+
+
+# Treatment B -------------------------------------------------------------
+
+# Visit 1
+m.B_v1 = c(135.1,83.4,111.8,45.6,95.4,172.7,170.7,38.2,109.8)
+sd.B_v1 = c(14.26,9.12,13.32,11.22,34.71,41.03,91.5,5.92,23.45)
+
+# Visit 2
+m.B_v2 = c(136.1,78.8,108.8,46.3,90.9,163.5,159.1,34.7,94.4)
+sd.B_v2 = c(14.89,8.68,13.1,12.44,33.23,39.87,83.77,5.43,20.11)
+
+# Visit 3
+m.B_v3 = c(140.6,78.2,107.6,48.1,82.5,157,143.9,29.3,85.9)
+sd.B_v3 = c(17.94,7.54,13.57,28.64,31.85,37.77,71.93,5.02,19.85)
+
+
+d_B = matrix(0,nrow=188*3,ncol=9)
+
+for(i in 1:9)
+{
+  while(TRUE)
+  {
+    if(is.positive.semi.definite(sig(sd.B_v1[i],sd.B_v2[i],sd.B_v3[i]))==T)
+    {
+      s = sig(sd.B_v1[i],sd.B_v2[i],sd.B_v3[i])
+      m = c(m.B_v1[i],m.B_v2[i],m.B_v3[i])
+      d_B[,i] = rmvnorm(188,mean=m,sigma=s)
+      break
+    }else
+    {
+      s = sig(sd.B_v1[i],sd.B_v2[i],sd.B_v3[i])
+    }
+  }
+}
+
+## Structured Data
+
+visit = rep(1:3,188)
+d_A = cbind(visit,d_A)
+d_B = cbind(visit,d_B)
